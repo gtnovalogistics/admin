@@ -1,0 +1,1877 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>GTNova Warehouse Receipt</title>
+  <meta name="description" content="Mobile-responsive Material Design warehouse receipt form and instant PDF generator." />
+  <meta property="og:title" content="Warehouse Receipt Generator" />
+  <meta property="og:description" content="Mobile-responsive Material Design warehouse receipt form and instant PDF generator." />
+  <meta property="og:type" content="website" />
+
+  <!-- Google Fonts: Roboto & Material Symbols -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Roboto+Mono:wght@400;600&display=swap" rel="stylesheet" />
+
+  <!-- jsPDF Library (standalone CDN for static hosting) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <style>
+    :root {
+      --md-primary: #1e3a8a;
+      --md-primary-dark: #172554;
+      --md-primary-light: #3b82f6;
+      --md-accent: #f59e0b;
+      --md-accent-hover: #d97706;
+      --md-bg: #f1f5f9;
+      --md-surface: #ffffff;
+      --md-surface-variant: #f8fafc;
+      --md-outline: #cbd5e1;
+      --md-outline-focus: #1e3a8a;
+      --md-text-primary: #0f172a;
+      --md-text-secondary: #475569;
+      --md-text-muted: #94a3b8;
+      --md-radius-sm: 8px;
+      --md-radius-md: 12px;
+      --md-radius-lg: 16px;
+      --md-radius-full: 9999px;
+      --md-shadow-1: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
+      --md-shadow-2: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.06);
+      --md-shadow-3: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+      --md-shadow-fab: 0 10px 25px -5px rgba(30, 58, 138, 0.4), 0 8px 10px -6px rgba(30, 58, 138, 0.2);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background-color: var(--md-bg);
+      color: var(--md-text-primary);
+      line-height: 1.5;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Top App Bar */
+    header.app-bar {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      background-color: var(--md-primary);
+      color: #ffffff;
+      box-shadow: var(--md-shadow-2);
+      border-bottom: 1px solid var(--md-primary-dark);
+    }
+
+    .app-bar-inner {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 16px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+
+    .brand-title {
+      font-size: 1.125rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      line-height: 1.2;
+    }
+
+    .brand-subtitle {
+      font-size: 0.75rem;
+      color: #bfdbfe;
+      font-weight: 400;
+    }
+
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 8px 16px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      border-radius: var(--md-radius-sm);
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+      text-decoration: none;
+      font-family: inherit;
+    }
+
+    .btn-primary {
+      background-color: var(--md-accent);
+      color: #0f172a;
+      font-weight: 600;
+      box-shadow: var(--md-shadow-1);
+    }
+    .btn-primary:hover {
+      background-color: var(--md-accent-hover);
+      box-shadow: var(--md-shadow-2);
+    }
+    .btn-primary:active {
+      transform: scale(0.98);
+    }
+
+    .btn-navy {
+      background-color: var(--md-primary);
+      color: #ffffff;
+      font-weight: 500;
+    }
+    .btn-navy:hover {
+      background-color: var(--md-primary-light);
+    }
+
+    .btn-tonal {
+      background-color: rgba(255, 255, 255, 0.15);
+      color: #ffffff;
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+    .btn-tonal:hover {
+      background-color: rgba(255, 255, 255, 0.25);
+    }
+
+    .btn-outlined {
+      background-color: var(--md-surface);
+      border-color: var(--md-outline);
+      color: var(--md-text-secondary);
+    }
+    .btn-outlined:hover {
+      background-color: var(--md-surface-variant);
+      color: var(--md-text-primary);
+    }
+
+    .btn-text {
+      background: none;
+      border: none;
+      color: var(--md-text-secondary);
+      padding: 6px 10px;
+    }
+    .btn-text:hover {
+      background-color: rgba(0, 0, 0, 0.05);
+      color: var(--md-text-primary);
+    }
+
+    .btn-sm {
+      padding: 4px 10px;
+      font-size: 0.75rem;
+      border-radius: var(--md-radius-sm);
+    }
+
+    /* Mobile Nav Bar */
+    .mobile-nav-tabs {
+      display: none;
+      background-color: var(--md-primary-dark);
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 10px 0;
+      background: none;
+      border: none;
+      border-bottom: 3px solid transparent;
+      color: #93c5fd;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .tab-btn.active {
+      color: #ffffff;
+      border-bottom-color: var(--md-accent);
+      background-color: rgba(255, 255, 255, 0.05);
+    }
+
+    /* Layout */
+    .container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 20px 16px;
+      width: 100%;
+      flex: 1;
+    }
+
+    .app-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 24px;
+      align-items: start;
+    }
+
+    @media (min-width: 1024px) {
+      .app-grid {
+        grid-template-columns: 7fr 5fr;
+      }
+    }
+
+    /* Material Cards */
+    .card {
+      background-color: var(--md-surface);
+      border-radius: var(--md-radius-lg);
+      border: 1px solid var(--md-outline);
+      box-shadow: var(--md-shadow-1);
+      padding: 20px;
+      margin-bottom: 20px;
+      transition: box-shadow 0.2s;
+    }
+
+    .card:hover {
+      box-shadow: var(--md-shadow-2);
+    }
+
+    .card-header-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--md-outline);
+    }
+
+    .card-title {
+      font-size: 0.8125rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--md-text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card-title svg {
+      width: 16px;
+      height: 16px;
+      color: var(--md-primary);
+    }
+
+    /* Form Fields */
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-group:last-child {
+      margin-bottom: 0;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    @media (min-width: 640px) {
+      .form-row-2 {
+        grid-template-columns: 1fr 1fr;
+      }
+      .form-row-3 {
+        grid-template-columns: 1fr 1fr 1fr;
+      }
+    }
+
+    label {
+      display: block;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      color: var(--md-text-primary);
+      margin-bottom: 6px;
+    }
+
+    .input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    input[type="text"],
+    input[type="date"],
+    input[type="number"],
+    select,
+    textarea {
+      width: 100%;
+      height: 44px;
+      padding: 0 14px;
+      border: 1px solid var(--md-outline);
+      border-radius: var(--md-radius-sm);
+      font-size: 0.875rem;
+      color: var(--md-text-primary);
+      background-color: var(--md-surface-variant);
+      transition: all 0.15s ease;
+      font-family: inherit;
+    }
+
+    input[type="date"] {
+      padding-right: 70px;
+    }
+
+    textarea {
+      height: auto;
+      min-height: 72px;
+      padding: 10px 14px;
+      resize: vertical;
+      line-height: 1.4;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      outline: none;
+      border-color: var(--md-outline-focus);
+      background-color: var(--md-surface);
+      box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.12);
+    }
+
+    .mono-input {
+      font-family: 'Roboto Mono', monospace;
+      font-size: 0.875rem;
+      letter-spacing: -0.02em;
+    }
+
+    .input-action-btn {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      background-color: var(--md-outline);
+      color: var(--md-text-primary);
+      border: none;
+      border-radius: var(--md-radius-sm);
+      font-size: 0.6875rem;
+      font-weight: 600;
+      padding: 4px 8px;
+      cursor: pointer;
+    }
+    .input-action-btn:hover {
+      background-color: #cbd5e1;
+    }
+
+    /* Segmented Unit Buttons */
+    .segmented-control {
+      display: inline-flex;
+      border: 1px solid var(--md-outline);
+      border-radius: var(--md-radius-sm);
+      overflow: hidden;
+      background-color: var(--md-surface-variant);
+    }
+
+    .seg-btn {
+      padding: 4px 10px;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--md-text-secondary);
+      font-family: inherit;
+    }
+
+    .seg-btn.active {
+      background-color: var(--md-primary);
+      color: #ffffff;
+    }
+
+    /* Condition Radio Chips */
+    .condition-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .chip {
+      padding: 6px 12px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      border-radius: var(--md-radius-sm);
+      border: 1px solid var(--md-outline);
+      background-color: var(--md-surface-variant);
+      color: var(--md-text-primary);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+      font-family: inherit;
+    }
+
+    .chip:hover {
+      background-color: #e2e8f0;
+    }
+
+    .chip.active-good {
+      background-color: #1e3a8a;
+      border-color: #1e3a8a;
+      color: #ffffff;
+    }
+    .chip.active-inspected {
+      background-color: #0d9488;
+      border-color: #0d9488;
+      color: #ffffff;
+    }
+    .chip.active-fragile {
+      background-color: #d97706;
+      border-color: #d97706;
+      color: #ffffff;
+    }
+    .chip.active-damaged {
+      background-color: #dc2626;
+      border-color: #dc2626;
+      color: #ffffff;
+    }
+
+    /* Receipt Preview Container */
+    .preview-sticky {
+      position: sticky;
+      top: 84px;
+    }
+
+    .receipt-sheet {
+      background-color: #ffffff;
+      border-radius: var(--md-radius-md);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05);
+      border: 1px solid #e2e8f0;
+      padding: 24px;
+      font-size: 0.8125rem;
+      color: #0f172a;
+    }
+
+    .sheet-header {
+      background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+      color: #ffffff;
+      padding: 16px 20px;
+      border-radius: var(--md-radius-sm);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .sheet-header h3 {
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+    .sheet-header p {
+      font-size: 0.6875rem;
+      color: #bfdbfe;
+    }
+
+    .sheet-badge {
+      text-align: right;
+    }
+    .sheet-badge .wr-code {
+      font-family: 'Roboto Mono', monospace;
+      font-weight: 700;
+      font-size: 0.9375rem;
+      color: #ffffff;
+    }
+    .sheet-badge .wr-date {
+      font-size: 0.6875rem;
+      color: #bfdbfe;
+    }
+
+    .sheet-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      background-color: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: var(--md-radius-sm);
+      padding: 14px;
+      margin-bottom: 16px;
+    }
+
+    .sheet-col-title {
+      font-size: 0.6875rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: #64748b;
+      margin-bottom: 4px;
+    }
+
+    .sheet-col-val {
+      font-weight: 600;
+      color: #0f172a;
+      font-size: 0.875rem;
+      margin-bottom: 4px;
+    }
+
+    .sheet-col-sub {
+      font-size: 0.75rem;
+      color: #475569;
+    }
+
+    /* Barcode simulation */
+    .sheet-barcode-bar {
+      background-color: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      border-radius: var(--md-radius-sm);
+      padding: 8px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .barcode-svg {
+      height: 24px;
+      width: 140px;
+    }
+
+    /* Metrics Table */
+    .metrics-table {
+      width: 100%;
+      border-collapse: collapse;
+      border: 1px solid #cbd5e1;
+      border-radius: var(--md-radius-sm);
+      overflow: hidden;
+      margin-bottom: 16px;
+      text-align: left;
+    }
+
+    .metrics-table th {
+      background-color: #1e3a8a;
+      color: #ffffff;
+      padding: 8px 12px;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+    }
+
+    .metrics-table td {
+      padding: 10px 12px;
+      border-right: 1px solid #e2e8f0;
+      background-color: #ffffff;
+    }
+
+    .metrics-table td:last-child {
+      border-right: none;
+    }
+
+    .metric-value {
+      font-size: 1.0625rem;
+      font-weight: 700;
+      color: #0f172a;
+      line-height: 1.1;
+    }
+
+    .metric-sub {
+      font-size: 0.6875rem;
+      color: #64748b;
+      margin-top: 2px;
+    }
+
+    /* Section details inside preview */
+    .sheet-box {
+      background-color: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: var(--md-radius-sm);
+      padding: 12px 14px;
+      margin-bottom: 12px;
+    }
+
+    .sheet-box-title {
+      font-size: 0.6875rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: #1e3a8a;
+      margin-bottom: 4px;
+    }
+
+    .sheet-box-content {
+      font-size: 0.8125rem;
+      color: #334155;
+      line-height: 1.4;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    /* Signatures */
+    .sheet-sign-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      border: 1px solid #cbd5e1;
+      border-radius: var(--md-radius-sm);
+      padding: 14px;
+      margin-top: 16px;
+      margin-bottom: 12px;
+    }
+
+    .sign-line {
+      height: 1px;
+      background-color: #94a3b8;
+      margin-top: 24px;
+      margin-bottom: 4px;
+    }
+
+    .sign-caption {
+      font-size: 0.6875rem;
+      color: #64748b;
+    }
+
+    .sheet-footer-note {
+      text-align: center;
+      font-size: 0.6875rem;
+      color: #94a3b8;
+      margin-top: 8px;
+    }
+
+    /* Mobile Floating Action Button */
+    .fab {
+      display: none;
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 50;
+      background-color: var(--md-primary);
+      color: #ffffff;
+      width: 56px;
+      height: 56px;
+      border-radius: 28px;
+      border: none;
+      box-shadow: var(--md-shadow-fab);
+      cursor: pointer;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.2s, background-color 0.2s;
+    }
+    .fab:hover {
+      background-color: var(--md-primary-light);
+      transform: scale(1.05);
+    }
+    .fab:active {
+      transform: scale(0.95);
+    }
+
+    /* Snackbar / Toast */
+    .snackbar {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background-color: #1e293b;
+      color: #ffffff;
+      padding: 12px 20px;
+      border-radius: var(--md-radius-md);
+      font-size: 0.875rem;
+      font-weight: 500;
+      box-shadow: var(--md-shadow-3);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      pointer-events: none;
+    }
+
+    .snackbar.show {
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* Print Styles */
+    @media print {
+      body {
+        background-color: #ffffff !important;
+      }
+      header.app-bar,
+      .mobile-nav-tabs,
+      #form-column,
+      .preview-controls,
+      .fab,
+      .snackbar,
+      .no-print {
+        display: none !important;
+      }
+      .container {
+        padding: 0 !important;
+        margin: 0 !important;
+        max-width: 100% !important;
+      }
+      .app-grid {
+        display: block !important;
+      }
+      #preview-column {
+        display: block !important;
+      }
+      .preview-sticky {
+        position: static !important;
+      }
+      .receipt-sheet {
+        box-shadow: none !important;
+        border: none !important;
+        padding: 0 !important;
+      }
+    }
+
+    /* Responsive Mobile Overrides */
+    @media (max-width: 1023px) {
+      .mobile-nav-tabs {
+        display: flex;
+      }
+      .fab {
+        display: flex;
+      }
+      #form-column.hidden-mobile,
+      #preview-column.hidden-mobile {
+        display: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top App Bar -->
+  <header class="app-bar no-print">
+    <div class="app-bar-inner">
+      <div class="brand">
+        <div class="brand-icon">
+            <img src="https://gtnovalogistics.com/resources/gtnova_caribconex_logo.jpeg" alt="logo" height="65px">
+        </div>
+        <div>
+          <h1 class="brand-title">Warehouse Receipt</h1>
+          <p class="brand-subtitle">GTNova Logistics</p>
+        </div>
+      </div>
+
+    <!-- Mobile View Tabs -->
+    <div class="mobile-nav-tabs">
+      <button id="tab-form" class="tab-btn active" type="button">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+        Input Form
+      </button>
+      <button id="tab-preview" class="tab-btn" type="button">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+        Receipt Preview
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="container">
+    <div class="app-grid">
+
+      <!-- FORM COLUMN -->
+      <div id="form-column">
+
+        <!-- Action bar -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; background: #fff; padding: 10px 16px; border-radius: var(--md-radius-md); border: 1px solid var(--md-outline);">
+          <div style="font-size: 0.8125rem; font-weight: 600; color: #334155; display: flex; align-items: center; gap: 8px;">
+            <span style="display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; background: #dbeafe; color: #1e3a8a; border-radius: 50%; font-size: 0.6875rem;">1</span>
+            Inbound Cargo Entry
+          </div>
+          <button id="btn-reset-form" class="btn btn-text btn-sm" type="button">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
+            Clear Form
+          </button>
+        </div>
+
+        <!-- Card 1: Identification -->
+        <div class="card">
+          <div class="card-header-bar">
+            <div class="card-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="9" x2="20" y2="9"></line><line x1="4" y1="15" x2="20" y2="15"></line><line x1="10" y1="3" x2="8" y2="21"></line><line x1="16" y1="3" x2="14" y2="21"></line></svg>
+              Identifiers &amp; Tracking
+            </div>
+          </div>
+
+          <div class="form-row form-row-2">
+            <!-- Date -->
+            <div class="form-group">
+              <label for="field-date">Date *</label>
+              <div class="input-wrapper">
+                <input id="field-date" type="date" required />
+                <button id="btn-today-date" class="input-action-btn" type="button">Today</button>
+              </div>
+            </div>
+
+            <!-- Warehouse Receipt Number -->
+            <div class="form-group">
+              <label for="field-wr-number">Warehouse Receipt Number *</label>
+              <div class="input-wrapper">
+                <input id="field-wr-number" type="text" class="mono-input" placeholder="WR-2026-0001" required />
+                <button id="btn-new-wr" class="input-action-btn" type="button">New #</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tracking # -->
+          <div class="form-group">
+            <label for="field-tracking">Tracking # *</label>
+            <input id="field-tracking" type="text" class="mono-input" placeholder="e.g. 1Z9999999999999999 or 7845123901" required />
+          </div>
+        </div>
+
+        <!-- Card 2: Courier & Customer (Select Elements) -->
+        <div class="card">
+          <div class="card-header-bar">
+            <div class="card-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
+              Carrier &amp; Consignee Details
+            </div>
+          </div>
+
+          <div class="form-row form-row-2">
+            <!-- Courier Select Element -->
+            <div class="form-group">
+              <label for="field-courier">Courier (Select Element) *</label>
+              <select id="field-courier">
+                <option value="FedEx Ground / Express">FedEx Ground / Express</option>
+                <option value="UPS (United Parcel Service)">UPS (United Parcel Service)</option>
+                <option value="DHL Express">DHL Express</option>
+                <option value="USPS (Postal Service)">USPS (Postal Service)</option>
+                <option value="Amazon Logistics">Amazon Logistics</option>
+                <option value="OnTrac / LaserShip">OnTrac / LaserShip</option>
+                <option value="R+L Carriers">R+L Carriers (Freight)</option>
+                <option value="Estes Express Lines">Estes Express Lines (LTL)</option>
+                <option value="XPO Logistics / Freight">XPO Logistics / Freight</option>
+                <option value="Local Courier / Dedicated Truck">Local Courier / Dedicated Truck</option>
+                <option value="Customer Direct Drop-off">Customer Direct Drop-off</option>
+                <option value="Other">Other (Custom Courier)</option>
+              </select>
+              <input id="field-custom-courier" type="text" placeholder="Enter custom courier name" style="display: none; margin-top: 8px; border-color: #f59e0b; background-color: #fffbeb;" />
+            </div>
+
+            <!-- Customer Select Element -->
+            <div class="form-group">
+              <label for="field-customer">Customer (Select Element) *</label>
+              <select id="field-customer">
+                <option value="Apex Global Logistics Corp.">Apex Global Logistics Corp.</option>
+                <option value="SwiftCommerce Fulfillment LLC">SwiftCommerce Fulfillment LLC</option>
+                <option value="Prime Retail Partners Inc.">Prime Retail Partners Inc.</option>
+                <option value="Nexus Import &amp; Export Ltd.">Nexus Import &amp; Export Ltd.</option>
+                <option value="Horizon Wholesale Distribution">Horizon Wholesale Distribution</option>
+                <option value="Metro Supply Chain Solutions">Metro Supply Chain Solutions</option>
+                <option value="Vanguard Industrial Parts">Vanguard Industrial Parts</option>
+                <option value="Pacifica Goods &amp; Apparel">Pacifica Goods &amp; Apparel</option>
+                <option value="Other">Other (Custom Customer)</option>
+              </select>
+              <input id="field-custom-customer" type="text" placeholder="Enter custom customer name" style="display: none; margin-top: 8px; border-color: #f59e0b; background-color: #fffbeb;" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 3: Pieces, Count, Weight & Dimensions (lxwxh) -->
+        <div class="card">
+          <div class="card-header-bar">
+            <div class="card-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+              Cargo Physical Specifications
+            </div>
+          </div>
+
+          <div class="form-row form-row-3">
+            <!-- Pieces -->
+            <div class="form-group">
+              <label for="field-pieces">Pieces (Packages) *</label>
+              <input id="field-pieces" type="number" inputmode="numeric" min="1" placeholder="e.g. 5" required />
+            </div>
+
+            <!-- Count -->
+            <div class="form-group">
+              <label for="field-count">Count (Units / Items) *</label>
+              <input id="field-count" type="number" inputmode="numeric" min="1" placeholder="e.g. 150" required />
+            </div>
+
+            <!-- Weight with Unit Selector -->
+            <div class="form-group">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <label for="field-weight" style="margin-bottom: 0;">Weight *</label>
+                <div class="segmented-control">
+                  <button id="weight-unit-lbs" class="seg-btn active" type="button">lbs</button>
+                  <button id="weight-unit-kg" class="seg-btn" type="button">kg</button>
+                </div>
+              </div>
+              <div class="input-wrapper">
+                <input id="field-weight" type="number" step="any" inputmode="decimal" placeholder="e.g. 48.5" required />
+              </div>
+            </div>
+          </div>
+
+          <!-- Dimensions (lxwxh) -->
+          <div class="form-group" style="margin-top: 12px; border-top: 1px dashed #e2e8f0; padding-top: 14px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <div>
+                <label style="margin-bottom: 0;">Dimensions (LxWxH) *</label>
+                <span id="volume-calc-label" style="font-size: 0.6875rem; color: #64748b;">Calculated volume: 0 cu.ft</span>
+              </div>
+              <div class="segmented-control">
+                <button id="dim-unit-in" class="seg-btn active" type="button">in</button>
+                <button id="dim-unit-cm" class="seg-btn" type="button">cm</button>
+              </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
+              <div>
+                <input id="field-dim-l" type="number" step="any" inputmode="decimal" placeholder="Length" style="text-align: center;" />
+                <span style="display: block; text-align: center; font-size: 0.6875rem; color: #94a3b8; margin-top: 2px;">L (<span class="curr-dim-unit">in</span>)</span>
+              </div>
+              <div>
+                <input id="field-dim-w" type="number" step="any" inputmode="decimal" placeholder="Width" style="text-align: center;" />
+                <span style="display: block; text-align: center; font-size: 0.6875rem; color: #94a3b8; margin-top: 2px;">W (<span class="curr-dim-unit">in</span>)</span>
+              </div>
+              <div>
+                <input id="field-dim-h" type="number" step="any" inputmode="decimal" placeholder="Height" style="text-align: center;" />
+                <span style="display: block; text-align: center; font-size: 0.6875rem; color: #94a3b8; margin-top: 2px;">H (<span class="curr-dim-unit">in</span>)</span>
+              </div>
+            </div>
+
+            <!-- Quick Dimension Presets -->
+            <div style="display: flex; gap: 6px; margin-top: 8px;">
+              <button id="btn-dim-box" class="btn btn-outlined btn-sm" type="button" style="font-size: 0.6875rem; padding: 2px 8px;">Standard Box (12×12×12)</button>
+              <button id="btn-dim-pallet" class="btn btn-outlined btn-sm" type="button" style="font-size: 0.6875rem; padding: 2px 8px;">Standard Pallet (48×40×48)</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 4: Description & Additional Information -->
+        <div class="card">
+          <div class="card-header-bar">
+            <div class="card-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+              Cargo Description &amp; Handling Notes
+            </div>
+          </div>
+
+          <!-- Description -->
+          <div class="form-group">
+            <label for="field-description">Description of Goods *</label>
+            <textarea id="field-description" rows="2" placeholder="e.g. Master cartons of electronics, serial numbers inspected, brand new..." required></textarea>
+          </div>
+
+          <!-- Additional Information -->
+          <div class="form-group">
+            <label for="field-additional-info">Additional Information</label>
+            <textarea id="field-additional-info" rows="2" placeholder="e.g. Inbound Dock #3, shrink-wrapped, fragile sensors, climate control requested..."></textarea>
+          </div>
+
+          <!-- Arrival Condition Chips -->
+          <div class="form-group">
+            <label>Cargo Condition / Arrival Status</label>
+            <div class="condition-chips">
+              <button class="chip active-good" type="button" data-condition="Good">✓ Good Condition</button>
+              <button class="chip" type="button" data-condition="Inspected">🔍 Inspected OK</button>
+              <button class="chip" type="button" data-condition="Fragile">⚠️ Fragile</button>
+              <button class="chip" type="button" data-condition="Damaged">✕ Damaged Packaging</button>
+            </div>
+          </div>
+
+          <!-- Staff Location & Receiver -->
+          <div class="form-row form-row-2" style="margin-top: 12px;">
+            <div class="form-group">
+              <label for="field-location">Warehouse Storage Bay</label>
+              <input id="field-location" type="text" placeholder="e.g. Bay 14, Rack B-02" />
+            </div>
+            <div class="form-group">
+              <label for="field-received-by">Receiving Agent</label>
+              <input id="field-received-by" type="text" placeholder="Inspector name &amp; badge #" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Primary Action Buttons inside Form -->
+        <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px;">
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <button id="btn-open-pdf-tab" class="btn btn-outlined" type="button" style="height: 44px;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+              Preview
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- PREVIEW COLUMN (Live Synchronized Receipt) -->
+      <div id="preview-column" class="hidden-mobile">
+        <div class="preview-sticky">
+
+          <!-- Controls above preview -->
+          <div class="preview-controls no-print" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <div style="display: flex; align-items: center; gap: 6px; font-size: 0.8125rem; font-weight: 600; color: #475569;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1e3a8a" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+              Live Synchronized Preview
+            </div>
+            <div style="display: flex; gap: 6px;">
+              <button id="btn-preview-download-pdf" class="btn btn-primary btn-sm" type="button">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                Download PDF
+              </button>
+            </div>
+          </div>
+
+          <!-- The Live Printable Receipt Sheet -->
+          <div class="receipt-sheet" id="live-receipt-sheet">
+
+            <!-- Sheet Header Banner -->
+            <div class="sheet-header">
+              <div>
+                <h3>OFFICIAL WAREHOUSE RECEIPT</h3>
+                <p>GTNova Logistics</p>
+              </div>
+              <div class="sheet-badge">
+                <div class="wr-code" id="pv-wr-number">WR-2026-0042</div>
+                <div class="wr-date" id="pv-date">DATE: 2026-09-03</div>
+              </div>
+            </div>
+
+            <!-- Carrier & Customer Box -->
+            <div class="sheet-grid">
+              <div>
+                <div class="sheet-col-title">Consignee / Customer</div>
+                <div class="sheet-col-val" id="pv-customer">Apex Global Logistics Corp.</div>
+                <div class="sheet-col-sub" id="pv-location">Bay 14, Rack B-03</div>
+                <div class="sheet-col-sub">Intake Status: Logged &amp; Verified</div>
+              </div>
+              <div>
+                <div class="sheet-col-title">Carrier / Courier</div>
+                <div class="sheet-col-val" id="pv-courier">FedEx Ground / Express</div>
+                <div class="sheet-col-sub">
+                  Tracking #: <span id="pv-tracking" style="font-family: 'Roboto Mono', monospace; font-weight: 600; color: #1e3a8a;">1Z9999999999999999</span>
+                </div>
+                <div class="sheet-col-sub">Condition: <span id="pv-condition" style="font-weight: 600;">Good Condition</span></div>
+              </div>
+            </div>
+
+            <!-- Simulated Barcode Line -->
+            <div class="sheet-barcode-bar">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <svg class="barcode-svg" viewBox="0 0 120 20" preserveAspectRatio="none">
+                  <rect x="0" y="0" width="2" height="20" fill="#0f172a" />
+                  <rect x="4" y="0" width="1" height="20" fill="#0f172a" />
+                  <rect x="7" y="0" width="3" height="20" fill="#0f172a" />
+                  <rect x="12" y="0" width="2" height="20" fill="#0f172a" />
+                  <rect x="16" y="0" width="1" height="20" fill="#0f172a" />
+                  <rect x="19" y="0" width="4" height="20" fill="#0f172a" />
+                  <rect x="25" y="0" width="2" height="20" fill="#0f172a" />
+                  <rect x="29" y="0" width="1" height="20" fill="#0f172a" />
+                  <rect x="33" y="0" width="3" height="20" fill="#0f172a" />
+                  <rect x="38" y="0" width="2" height="20" fill="#0f172a" />
+                  <rect x="42" y="0" width="1" height="20" fill="#0f172a" />
+                  <rect x="45" y="0" width="3" height="20" fill="#0f172a" />
+                  <rect x="50" y="0" width="2" height="20" fill="#0f172a" />
+                  <rect x="54" y="0" width="4" height="20" fill="#0f172a" />
+                  <rect x="60" y="0" width="1" height="20" fill="#0f172a" />
+                  <rect x="63" y="0" width="2" height="20" fill="#0f172a" />
+                  <rect x="67" y="0" width="3" height="20" fill="#0f172a" />
+                  <rect x="72" y="0" width="1" height="20" fill="#0f172a" />
+                  <rect x="75" y="0" width="2" height="20" fill="#0f172a" />
+                  <rect x="79" y="0" width="4" height="20" fill="#0f172a" />
+                  <rect x="85" y="0" width="1" height="20" fill="#0f172a" />
+                  <rect x="88" y="0" width="3" height="20" fill="#0f172a" />
+                  <rect x="93" y="0" width="2" height="20" fill="#0f172a" />
+                  <rect x="97" y="0" width="1" height="20" fill="#0f172a" />
+                  <rect x="100" y="0" width="3" height="20" fill="#0f172a" />
+                  <rect x="105" y="0" width="2" height="20" fill="#0f172a" />
+                  <rect x="109" y="0" width="1" height="20" fill="#0f172a" />
+                  <rect x="112" y="0" width="4" height="20" fill="#0f172a" />
+                  <rect x="118" y="0" width="2" height="20" fill="#0f172a" />
+                </svg>
+                <span id="pv-barcode-text" style="font-family: 'Roboto Mono', monospace; font-size: 0.6875rem; color: #64748b;">* WR-2026-0042 *</span>
+              </div>
+              <span style="font-size: 0.6875rem; color: #94a3b8;">Official Manifest Entry</span>
+            </div>
+
+            <!-- Physical Metrics Table -->
+            <table class="metrics-table">
+              <thead>
+                <tr>
+                  <th>Pieces</th>
+                  <th>Count</th>
+                  <th>Total Weight</th>
+                  <th>Dimensions (LxWxH)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>
+                    <div class="metric-value"><span id="pv-pieces">3</span> <span style="font-size: 0.75rem; font-weight: normal; color: #64748b;">pcs</span></div>
+                    <div class="metric-sub">Shipped packs</div>
+                  </td>
+                  <td>
+                    <div class="metric-value"><span id="pv-count">72</span> <span style="font-size: 0.75rem; font-weight: normal; color: #64748b;">units</span></div>
+                    <div class="metric-sub">Unit inventory</div>
+                  </td>
+                  <td>
+                    <div class="metric-value"><span id="pv-weight">48.5</span> <span id="pv-weight-unit" style="font-size: 0.75rem; font-weight: normal; color: #64748b;">lbs</span></div>
+                    <div class="metric-sub">Scale weight</div>
+                  </td>
+                  <td>
+                    <div class="metric-value" style="font-size: 0.9375rem;"><span id="pv-dimensions">24 × 18 × 16</span> <span id="pv-dim-unit" style="font-size: 0.75rem; font-weight: normal; color: #64748b;">in</span></div>
+                    <div class="metric-sub" id="pv-volume-sub">Vol: 4.00 cu.ft</div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+
+            <!-- Description of Goods -->
+            <div class="sheet-box">
+              <div class="sheet-box-title">Description of Goods / Commodity</div>
+              <div class="sheet-box-content" id="pv-description">Precision electronic components, master-pack cartons with interior anti-static packaging.</div>
+            </div>
+
+            <!-- Additional Information -->
+            <div class="sheet-box">
+              <div class="sheet-box-title">Additional Information &amp; Handling Notes</div>
+              <div class="sheet-box-content" id="pv-additional-info">Received at Dock 4. Exterior packaging intact. Handled via standard pallet jack.</div>
+            </div>
+
+            <!-- Dual Signatures -->
+            <div class="sheet-sign-grid">
+              <div>
+                <div style="font-size: 0.6875rem; font-weight: 700; color: #64748b; text-transform: uppercase;">Warehouse Receiving Agent</div>
+                <div style="font-weight: 600; font-size: 0.8125rem; color: #0f172a; margin-top: 2px;" id="pv-received-by">J. Martinez (Badge #4812)</div>
+                <div class="sign-line"></div>
+                <div class="sign-caption">Authorized Signature &amp; Date Stamp</div>
+              </div>
+              <div>
+                <div style="font-size: 0.6875rem; font-weight: 700; color: #64748b; text-transform: uppercase;">Carrier Representative</div>
+                <div style="font-weight: 600; font-size: 0.8125rem; color: #0f172a; margin-top: 2px;" id="pv-carrier-sign">Carrier Driver Sign-off</div>
+                <div class="sign-line"></div>
+                <div class="sign-caption">Driver Signature / Delivered In Full</div>
+              </div>
+            </div>
+
+            <div class="sheet-footer-note">
+              This warehouse receipt certifies custody and intake of specified cargo. Non-negotiable unless officially endorsed.
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Mobile Floating Action Button (FAB) -->
+  <button id="mobile-fab" class="fab" type="button" title="Download PDF">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+  </button>
+
+  <!-- Material Toast / Snackbar Notification -->
+  <div id="snackbar" class="snackbar">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+    <span id="snackbar-text">Notification message</span>
+  </div>
+
+  <!-- STANDALONE JAVASCRIPT -->
+  <script>
+    (function () {
+      'use strict';
+
+      // App State
+      const state = {
+        date: getTodayString(),
+        warehouseReceiptNumber: generateWRNumber(),
+        trackingNumber: '1Z9999999999999999',
+        courier: 'FedEx Ground / Express',
+        customCourier: '',
+        customer: 'Apex Global Logistics Corp.',
+        customCustomer: '',
+        pieces: '3',
+        count: '72',
+        weight: '48.5',
+        weightUnit: 'lbs',
+        length: '24',
+        width: '18',
+        height: '16',
+        dimUnit: 'in',
+        description: 'Precision electronic components, master-pack cartons with interior anti-static packaging.',
+        additionalInformation: 'Received at Dock 4. Exterior packaging intact. Handled via standard pallet jack.',
+        condition: 'Good',
+        warehouseLocation: 'Bay 14, Rack B-03',
+        receivedBy: 'J. Martinez (Badge #4812)'
+      };
+
+      // Utility helpers
+      function getTodayString() {
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        const mm = String(today.getMonth() + 1).padStart(2, '0');
+        const dd = String(today.getDate()).padStart(2, '0');
+        return `${yyyy}-${mm}-${dd}`;
+      }
+
+      function generateWRNumber() {
+        const year = new Date().getFullYear();
+        const randomNum = Math.floor(10000 + Math.random() * 90000);
+        return `WR-${year}-${randomNum}`;
+      }
+
+      function showSnackbar(message) {
+        const bar = document.getElementById('snackbar');
+        const text = document.getElementById('snackbar-text');
+        text.textContent = message;
+        bar.classList.add('show');
+        setTimeout(() => {
+          bar.classList.remove('show');
+        }, 3200);
+      }
+
+      // DOM Elements
+      const fieldDate = document.getElementById('field-date');
+      const fieldWRNumber = document.getElementById('field-wr-number');
+      const fieldTracking = document.getElementById('field-tracking');
+      const fieldCourier = document.getElementById('field-courier');
+      const fieldCustomCourier = document.getElementById('field-custom-courier');
+      const fieldCustomer = document.getElementById('field-customer');
+      const fieldCustomCustomer = document.getElementById('field-custom-customer');
+      const fieldPieces = document.getElementById('field-pieces');
+      const fieldCount = document.getElementById('field-count');
+      const fieldWeight = document.getElementById('field-weight');
+      const fieldDimL = document.getElementById('field-dim-l');
+      const fieldDimW = document.getElementById('field-dim-w');
+      const fieldDimH = document.getElementById('field-dim-h');
+      const fieldDesc = document.getElementById('field-description');
+      const fieldAddInfo = document.getElementById('field-additional-info');
+      const fieldLocation = document.getElementById('field-location');
+      const fieldReceivedBy = document.getElementById('field-received-by');
+
+      // Unit Toggles
+      const btnWeightLbs = document.getElementById('weight-unit-lbs');
+      const btnWeightKg = document.getElementById('weight-unit-kg');
+      const btnDimIn = document.getElementById('dim-unit-in');
+      const btnDimCm = document.getElementById('dim-unit-cm');
+
+      // Preview DOM Elements
+      const pvWRNumber = document.getElementById('pv-wr-number');
+      const pvDate = document.getElementById('pv-date');
+      const pvCustomer = document.getElementById('pv-customer');
+      const pvCourier = document.getElementById('pv-courier');
+      const pvTracking = document.getElementById('pv-tracking');
+      const pvCondition = document.getElementById('pv-condition');
+      const pvLocation = document.getElementById('pv-location');
+      const pvPieces = document.getElementById('pv-pieces');
+      const pvCount = document.getElementById('pv-count');
+      const pvWeight = document.getElementById('pv-weight');
+      const pvWeightUnit = document.getElementById('pv-weight-unit');
+      const pvDimensions = document.getElementById('pv-dimensions');
+      const pvDimUnit = document.getElementById('pv-dim-unit');
+      const pvVolumeSub = document.getElementById('pv-volume-sub');
+      const pvDescription = document.getElementById('pv-description');
+      const pvAdditionalInfo = document.getElementById('pv-additional-info');
+      const pvReceivedBy = document.getElementById('pv-received-by');
+      const pvCarrierSign = document.getElementById('pv-carrier-sign');
+      const pvBarcodeText = document.getElementById('pv-barcode-text');
+      const volumeCalcLabel = document.getElementById('volume-calc-label');
+
+      // Populate initial values into input fields
+      function populateFormInputs() {
+        fieldDate.value = state.date;
+        fieldWRNumber.value = state.warehouseReceiptNumber;
+        fieldTracking.value = state.trackingNumber;
+        fieldCourier.value = state.courier;
+        fieldCustomCourier.value = state.customCourier;
+        fieldCustomer.value = state.customer;
+        fieldCustomCustomer.value = state.customCustomer;
+        fieldPieces.value = state.pieces;
+        fieldCount.value = state.count;
+        fieldWeight.value = state.weight;
+        fieldDimL.value = state.length;
+        fieldDimW.value = state.width;
+        fieldDimH.value = state.height;
+        fieldDesc.value = state.description;
+        fieldAddInfo.value = state.additionalInformation;
+        fieldLocation.value = state.warehouseLocation;
+        fieldReceivedBy.value = state.receivedBy;
+
+        updateUnitButtons();
+        updateConditionChips();
+        updateCustomCourierVisibility();
+        updateCustomCustomerVisibility();
+      }
+
+      function updateCustomCourierVisibility() {
+        if (state.courier === 'Other') {
+          fieldCustomCourier.style.display = 'block';
+        } else {
+          fieldCustomCourier.style.display = 'none';
+        }
+      }
+
+      function updateCustomCustomerVisibility() {
+        if (state.customer === 'Other') {
+          fieldCustomCustomer.style.display = 'block';
+        } else {
+          fieldCustomCustomer.style.display = 'none';
+        }
+      }
+
+      function getEffectiveCourier() {
+        if (state.courier === 'Other' && state.customCourier.trim()) {
+          return state.customCourier.trim();
+        }
+        return state.courier;
+      }
+
+      function getEffectiveCustomer() {
+        if (state.customer === 'Other' && state.customCustomer.trim()) {
+          return state.customCustomer.trim();
+        }
+        return state.customer;
+      }
+
+      function calculateVolume() {
+        const l = parseFloat(state.length) || 0;
+        const w = parseFloat(state.width) || 0;
+        const h = parseFloat(state.height) || 0;
+        const cubicTotal = l * w * h;
+
+        if (cubicTotal <= 0) {
+          return { text: '0 cu.ft', formatted: '0' };
+        }
+
+        if (state.dimUnit === 'in') {
+          const cuft = (cubicTotal / 1728).toFixed(2);
+          return { text: `${cuft} cu.ft`, formatted: cuft };
+        } else {
+          const cum = (cubicTotal / 1000000).toFixed(3);
+          return { text: `${cum} m³`, formatted: cum };
+        }
+      }
+
+      // Synchronize Live Receipt Preview
+      function updateLivePreview() {
+        pvWRNumber.textContent = state.warehouseReceiptNumber || 'N/A';
+        pvDate.textContent = `DATE: ${state.date || 'N/A'}`;
+        pvCustomer.textContent = getEffectiveCustomer() || 'Unspecified Customer';
+        pvCourier.textContent = getEffectiveCourier() || 'Courier';
+        pvTracking.textContent = state.trackingNumber || 'N/A';
+        pvCondition.textContent = `${state.condition} Condition`;
+        pvLocation.textContent = state.warehouseLocation || 'Warehouse Inbound Bay';
+        pvPieces.textContent = state.pieces || '0';
+        pvCount.textContent = state.count || '0';
+        pvWeight.textContent = state.weight || '0';
+        pvWeightUnit.textContent = state.weightUnit;
+
+        const dimL = state.length || '0';
+        const dimW = state.width || '0';
+        const dimH = state.height || '0';
+        pvDimensions.textContent = `${dimL} × ${dimW} × ${dimH}`;
+        pvDimUnit.textContent = state.dimUnit;
+
+        const vol = calculateVolume();
+        pvVolumeSub.textContent = `Vol: ${vol.text}`;
+        volumeCalcLabel.textContent = `Calculated volume: ${vol.text}`;
+
+        pvDescription.textContent = state.description || 'No detailed cargo description provided.';
+        pvAdditionalInfo.textContent = state.additionalInformation || 'None specified.';
+        pvReceivedBy.textContent = state.receivedBy || 'Warehouse Inspector';
+        pvCarrierSign.textContent = `${getEffectiveCourier()} Representative`;
+        pvBarcodeText.textContent = `* ${state.warehouseReceiptNumber || 'RECEIPT'} *`;
+
+        // Update dim unit labels in form
+        document.querySelectorAll('.curr-dim-unit').forEach(el => {
+          el.textContent = state.dimUnit;
+        });
+      }
+
+      function updateUnitButtons() {
+        btnWeightLbs.classList.toggle('active', state.weightUnit === 'lbs');
+        btnWeightKg.classList.toggle('active', state.weightUnit === 'kg');
+        btnDimIn.classList.toggle('active', state.dimUnit === 'in');
+        btnDimCm.classList.toggle('active', state.dimUnit === 'cm');
+      }
+
+      function updateConditionChips() {
+        document.querySelectorAll('.chip').forEach(chip => {
+          const cond = chip.getAttribute('data-condition');
+          chip.className = 'chip';
+          if (cond === state.condition) {
+            if (cond === 'Good') chip.classList.add('active-good');
+            else if (cond === 'Inspected') chip.classList.add('active-inspected');
+            else if (cond === 'Fragile') chip.classList.add('active-fragile');
+            else if (cond === 'Damaged') chip.classList.add('active-damaged');
+          }
+        });
+      }
+
+      // Input event bindings
+      fieldDate.addEventListener('input', e => { state.date = e.target.value; updateLivePreview(); });
+      fieldWRNumber.addEventListener('input', e => { state.warehouseReceiptNumber = e.target.value; updateLivePreview(); });
+      fieldTracking.addEventListener('input', e => { state.trackingNumber = e.target.value; updateLivePreview(); });
+      fieldCourier.addEventListener('change', e => {
+        state.courier = e.target.value;
+        updateCustomCourierVisibility();
+        updateLivePreview();
+      });
+      fieldCustomCourier.addEventListener('input', e => { state.customCourier = e.target.value; updateLivePreview(); });
+      fieldCustomer.addEventListener('change', e => {
+        state.customer = e.target.value;
+        updateCustomCustomerVisibility();
+        updateLivePreview();
+      });
+      fieldCustomCustomer.addEventListener('input', e => { state.customCustomer = e.target.value; updateLivePreview(); });
+      fieldPieces.addEventListener('input', e => { state.pieces = e.target.value; updateLivePreview(); });
+      fieldCount.addEventListener('input', e => { state.count = e.target.value; updateLivePreview(); });
+      fieldWeight.addEventListener('input', e => { state.weight = e.target.value; updateLivePreview(); });
+      fieldDimL.addEventListener('input', e => { state.length = e.target.value; updateLivePreview(); });
+      fieldDimW.addEventListener('input', e => { state.width = e.target.value; updateLivePreview(); });
+      fieldDimH.addEventListener('input', e => { state.height = e.target.value; updateLivePreview(); });
+      fieldDesc.addEventListener('input', e => { state.description = e.target.value; updateLivePreview(); });
+      fieldAddInfo.addEventListener('input', e => { state.additionalInformation = e.target.value; updateLivePreview(); });
+      fieldLocation.addEventListener('input', e => { state.warehouseLocation = e.target.value; updateLivePreview(); });
+      fieldReceivedBy.addEventListener('input', e => { state.receivedBy = e.target.value; updateLivePreview(); });
+
+      // Action buttons
+      document.getElementById('btn-today-date').addEventListener('click', () => {
+        state.date = getTodayString();
+        fieldDate.value = state.date;
+        updateLivePreview();
+      });
+
+      document.getElementById('btn-new-wr').addEventListener('click', () => {
+        state.warehouseReceiptNumber = generateWRNumber();
+        fieldWRNumber.value = state.warehouseReceiptNumber;
+        updateLivePreview();
+      });
+
+      // Unit switchers
+      btnWeightLbs.addEventListener('click', () => { state.weightUnit = 'lbs'; updateUnitButtons(); updateLivePreview(); });
+      btnWeightKg.addEventListener('click', () => { state.weightUnit = 'kg'; updateUnitButtons(); updateLivePreview(); });
+      btnDimIn.addEventListener('click', () => { state.dimUnit = 'in'; updateUnitButtons(); updateLivePreview(); });
+      btnDimCm.addEventListener('click', () => { state.dimUnit = 'cm'; updateUnitButtons(); updateLivePreview(); });
+
+      // Dimension presets
+      document.getElementById('btn-dim-box').addEventListener('click', () => {
+        state.length = '12';
+        state.width = '12';
+        state.height = '12';
+        state.dimUnit = 'in';
+        fieldDimL.value = '12';
+        fieldDimW.value = '12';
+        fieldDimH.value = '12';
+        updateUnitButtons();
+        updateLivePreview();
+      });
+
+      document.getElementById('btn-dim-pallet').addEventListener('click', () => {
+        state.length = '48';
+        state.width = '40';
+        state.height = '48';
+        state.dimUnit = 'in';
+        fieldDimL.value = '48';
+        fieldDimW.value = '40';
+        fieldDimH.value = '48';
+        updateUnitButtons();
+        updateLivePreview();
+      });
+
+      // Condition chips
+      document.querySelectorAll('.chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+          state.condition = chip.getAttribute('data-condition');
+          updateConditionChips();
+          updateLivePreview();
+        });
+      });
+
+      // Reset form
+      document.getElementById('btn-reset-form').addEventListener('click', () => {
+        state.date = getTodayString();
+        state.warehouseReceiptNumber = generateWRNumber();
+        state.trackingNumber = '';
+        state.courier = 'FedEx Ground / Express';
+        state.customCourier = '';
+        state.customer = 'Apex Global Logistics Corp.';
+        state.customCustomer = '';
+        state.pieces = '1';
+        state.count = '1';
+        state.weight = '';
+        state.length = '';
+        state.width = '';
+        state.height = '';
+        state.description = '';
+        state.additionalInformation = '';
+        state.condition = 'Good';
+        populateFormInputs();
+        updateLivePreview();
+        showSnackbar('Form reset with new receipt number');
+      });
+
+
+      // Mobile Tabs
+      const tabForm = document.getElementById('tab-form');
+      const tabPreview = document.getElementById('tab-preview');
+      const formColumn = document.getElementById('form-column');
+      const previewColumn = document.getElementById('preview-column');
+
+      tabForm.addEventListener('click', () => {
+        tabForm.classList.add('active');
+        tabPreview.classList.remove('active');
+        formColumn.classList.remove('hidden-mobile');
+        previewColumn.classList.add('hidden-mobile');
+      });
+
+      tabPreview.addEventListener('click', () => {
+        tabPreview.classList.add('active');
+        tabForm.classList.remove('active');
+        previewColumn.classList.remove('hidden-mobile');
+        formColumn.classList.add('hidden-mobile');
+      });
+
+      // ==========================================
+      // jsPDF Vector Receipt Generator
+      // ==========================================
+      function buildPdfDocument() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({
+          orientation: 'portrait',
+          unit: 'mm',
+          format: 'a4'
+        });
+
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const margin = 14;
+        const contentWidth = pageWidth - margin * 2;
+        let y = 14;
+
+        // 1. Header Banner (Material Indigo)
+        doc.setFillColor(30, 58, 138); // #1e3a8a
+        doc.rect(margin, y, contentWidth, 24, 'F');
+
+        // Header Title
+        doc.setTextColor(255, 255, 255);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(16);
+        doc.text('OFFICIAL WAREHOUSE RECEIPT', margin + 6, y + 9);
+
+        // Header Subtitle
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8.5);
+        doc.setTextColor(224, 231, 255);
+        doc.text('GTNova Logistics', margin + 6, y + 16);
+
+        // Header WR # and Date (Right Aligned)
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(11);
+        doc.setTextColor(255, 255, 255);
+        doc.text(state.warehouseReceiptNumber || 'N/A', pageWidth - margin - 6, y + 9.5, { align: 'right' });
+
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8.5);
+        doc.setTextColor(199, 210, 254);
+        doc.text(`DATE: ${state.date || 'N/A'}`, pageWidth - margin - 6, y + 16, { align: 'right' });
+
+        y += 30;
+
+        // 2. Consignee & Carrier Information Box
+        doc.setDrawColor(226, 232, 240);
+        doc.setFillColor(248, 250, 252);
+        doc.roundedRect(margin, y, contentWidth, 38, 2, 2, 'FD');
+
+        // Column 1: Customer
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8.5);
+        doc.setTextColor(100, 116, 139);
+        doc.text('CONSIGNEE / CUSTOMER', margin + 6, y + 7);
+
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(11);
+        doc.setTextColor(15, 23, 42);
+        const custName = getEffectiveCustomer() || 'Unspecified Customer';
+        doc.text(doc.splitTextToSize(custName, 85), margin + 6, y + 14);
+
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8.5);
+        doc.setTextColor(71, 85, 105);
+        doc.text(`Warehouse Location: ${state.warehouseLocation || 'Bay Staging'}`, margin + 6, y + 26);
+        doc.text(`Intake Status: Logged & Verified`, margin + 6, y + 32);
+
+        // Vertical divider
+        const col2X = margin + 96;
+        doc.setDrawColor(226, 232, 240);
+        doc.line(col2X - 5, y + 4, col2X - 5, y + 34);
+
+        // Column 2: Carrier / Courier
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8.5);
+        doc.setTextColor(100, 116, 139);
+        doc.text('CARRIER / COURIER DETAILS', col2X, y + 7);
+
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(10.5);
+        doc.setTextColor(15, 23, 42);
+        const courName = getEffectiveCourier() || 'Standard Courier';
+        doc.text(doc.splitTextToSize(courName, 78), col2X, y + 14);
+
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8.5);
+        doc.setTextColor(100, 116, 139);
+        doc.text('TRACKING #:', col2X, y + 24);
+
+        doc.setFont('courier', 'bold');
+        doc.setFontSize(9.5);
+        doc.setTextColor(30, 58, 138);
+        doc.text(state.trackingNumber || 'N/A', col2X + 24, y + 24);
+
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8.5);
+        doc.setTextColor(71, 85, 105);
+        doc.text(`Condition on Arrival: ${state.condition}`, col2X, y + 32);
+
+        y += 44;
+
+        // 3. Barcode row
+        doc.setFillColor(241, 245, 249);
+        doc.rect(margin, y, contentWidth, 14, 'F');
+        doc.setDrawColor(203, 213, 225);
+        doc.rect(margin, y, contentWidth, 14, 'S');
+
+        // Draw barcode bars based on receipt number seed
+        const barcodeStartX = margin + 12;
+        const barcodeWidth = 90;
+        const barcodeY = y + 2;
+        const barcodeHeight = 7;
+        doc.setFillColor(15, 23, 42);
+
+        const seed = (state.warehouseReceiptNumber + state.trackingNumber).replace(/[^a-zA-Z0-9]/g, '');
+        let curX = barcodeStartX;
+        for (let i = 0; i < seed.length * 2 && curX < barcodeStartX + barcodeWidth; i++) {
+          const charCode = seed.charCodeAt(i % seed.length) || 65;
+          const barW = (charCode % 3) * 0.4 + 0.3;
+          const spaceW = ((charCode >> 1) % 3) * 0.4 + 0.4;
+          doc.rect(curX, barcodeY, barW, barcodeHeight, 'F');
+          curX += barW + spaceW;
+        }
+
+        doc.setFont('courier', 'normal');
+        doc.setFontSize(7.5);
+        doc.setTextColor(71, 85, 105);
+        doc.text(`* ${state.warehouseReceiptNumber} *`, barcodeStartX + 20, y + 12);
+
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8);
+        doc.setTextColor(100, 116, 139);
+        doc.text(`Generated: ${new Date().toLocaleTimeString()} | Verified Intake Entry`, pageWidth - margin - 6, y + 8.5, { align: 'right' });
+
+        y += 19;
+
+        // 4. Cargo Metrics Table
+        doc.setFillColor(30, 58, 138);
+        doc.rect(margin, y, contentWidth, 8, 'F');
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8.5);
+        doc.setTextColor(255, 255, 255);
+
+        const colW = contentWidth / 4;
+        doc.text('PIECES', margin + 6, y + 5.5);
+        doc.text('ITEM / UNIT COUNT', margin + colW + 6, y + 5.5);
+        doc.text('TOTAL WEIGHT', margin + colW * 2 + 6, y + 5.5);
+        doc.text('DIMENSIONS (LxWxH)', margin + colW * 3 + 6, y + 5.5);
+
+        y += 8;
+
+        doc.setFillColor(255, 255, 255);
+        doc.rect(margin, y, contentWidth, 14, 'FD');
+        doc.setDrawColor(226, 232, 240);
+        doc.rect(margin, y, contentWidth, 14, 'S');
+
+        // Divider lines
+        doc.line(margin + colW, y, margin + colW, y + 14);
+        doc.line(margin + colW * 2, y, margin + colW * 2, y + 14);
+        doc.line(margin + colW * 3, y, margin + colW * 3, y + 14);
+
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(13);
+        doc.setTextColor(15, 23, 42);
+
+        // Pieces
+        doc.text(`${state.pieces || '0'} pcs`, margin + 6, y + 8.5);
+
+        // Count
+        doc.text(`${state.count || '0'} units`, margin + colW + 6, y + 8.5);
+
+        // Weight
+        doc.text(`${state.weight || '0'} ${state.weightUnit}`, margin + colW * 2 + 6, y + 8.5);
+
+        // Dimensions
+        const dimText = `${state.length || '0'} x ${state.width || '0'} x ${state.height || '0'} ${state.dimUnit}`;
+        doc.setFontSize(10.5);
+        doc.text(dimText, margin + colW * 3 + 6, y + 8.5);
+
+        // Metric subtext
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(7);
+        doc.setTextColor(100, 116, 139);
+        doc.text('Shipped packages', margin + 6, y + 12);
+        doc.text('Inner content tally', margin + colW + 6, y + 12);
+        doc.text('Certified scale tare', margin + colW * 2 + 6, y + 12);
+
+        const vol = calculateVolume();
+        doc.text(`Vol: ${vol.text}`, margin + colW * 3 + 6, y + 12);
+
+        y += 20;
+
+        // 5. Description of Goods
+        doc.setFillColor(248, 250, 252);
+        doc.setDrawColor(226, 232, 240);
+        doc.roundedRect(margin, y, contentWidth, 34, 1.5, 1.5, 'FD');
+
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8.5);
+        doc.setTextColor(30, 58, 138);
+        doc.text('DESCRIPTION OF GOODS / COMMODITY', margin + 5, y + 6);
+
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(9.5);
+        doc.setTextColor(30, 41, 59);
+        const descLines = doc.splitTextToSize(state.description || 'No detailed cargo description provided.', contentWidth - 10);
+        doc.text(descLines, margin + 5, y + 13);
+
+        y += 39;
+
+        // 6. Additional Information
+        doc.setFillColor(248, 250, 252);
+        doc.setDrawColor(226, 232, 240);
+        doc.roundedRect(margin, y, contentWidth, 34, 1.5, 1.5, 'FD');
+
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8.5);
+        doc.setTextColor(30, 58, 138);
+        doc.text('ADDITIONAL INFORMATION & SPECIAL HANDLING NOTES', margin + 5, y + 6);
+
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(9.5);
+        doc.setTextColor(30, 41, 59);
+        const addLines = doc.splitTextToSize(state.additionalInformation || 'None specified.', contentWidth - 10);
+        doc.text(addLines, margin + 5, y + 13);
+
+        y += 40;
+
+        // 7. Signature Sign-offs
+        doc.setDrawColor(203, 213, 225);
+        doc.setFillColor(255, 255, 255);
+        doc.roundedRect(margin, y, contentWidth, 34, 1.5, 1.5, 'S');
+
+        const halfW = contentWidth / 2;
+
+        // Receiver Sign
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8);
+        doc.setTextColor(100, 116, 139);
+        doc.text('WAREHOUSE RECEIVING AGENT', margin + 6, y + 7);
+
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(9.5);
+        doc.setTextColor(15, 23, 42);
+        doc.text(state.receivedBy || 'Staff Inspector', margin + 6, y + 14);
+
+        doc.setDrawColor(148, 163, 184);
+        doc.line(margin + 6, y + 24, margin + halfW - 10, y + 24);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(7.5);
+        doc.setTextColor(148, 163, 184);
+        doc.text('Authorized Signature & Seal', margin + 6, y + 28);
+
+        // Driver Sign
+        const signCol2 = margin + halfW + 6;
+        doc.line(margin + halfW, y + 2, margin + halfW, y + 32);
+
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8);
+        doc.setTextColor(100, 116, 139);
+        doc.text('DELIVERY CARRIER DRIVER / REPRESENTATIVE', signCol2, y + 7);
+
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(9.5);
+        doc.setTextColor(15, 23, 42);
+        doc.text(`Carrier: ${getEffectiveCourier()}`, signCol2, y + 14);
+
+        doc.line(signCol2, y + 24, margin + contentWidth - 6, y + 24);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(7.5);
+        doc.setTextColor(148, 163, 184);
+        doc.text('Driver Signature / Delivered In Full', signCol2, y + 28);
+
+        // Footer Legal Notice
+        y += 39;
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(7.5);
+        doc.setTextColor(148, 163, 184);
+        doc.text(
+          'This warehouse receipt confirms intake for storage and staging subject to facility terms. Non-negotiable unless endorsed.',
+          pageWidth / 2,
+          y,
+          { align: 'center' }
+        );
+
+        return doc;
+      }
+
+      // Download PDF Handler
+      function downloadPdfAction() {
+        try {
+          const doc = buildPdfDocument();
+          const filename = `${state.warehouseReceiptNumber || 'warehouse-receipt'}.pdf`;
+          doc.save(filename);
+          showSnackbar(`Downloaded ${filename}`);
+        } catch (err) {
+          console.error(err);
+          showSnackbar('Error generating PDF. Please verify inputs.');
+        }
+      }
+
+      // Open PDF in Preview Window
+      function openPdfTabAction() {
+        try {
+          const doc = buildPdfDocument();
+          const blob = doc.output('blob');
+          const blobUrl = URL.createObjectURL(blob);
+          window.open(blobUrl, '_blank');
+          showSnackbar('Opened PDF in new browser tab');
+        } catch (err) {
+          console.error(err);
+          showSnackbar('Failed to open PDF tab.');
+        }
+      }
+
+
+      // Attach PDF and print listeners
+      document.getElementById('btn-preview-download-pdf').addEventListener('click', downloadPdfAction);
+      document.getElementById('mobile-fab').addEventListener('click', downloadPdfAction);
+      document.getElementById('btn-open-pdf-tab').addEventListener('click', openPdfTabAction);
+
+
+      // Initialize
+      populateFormInputs();
+      updateLivePreview();
+    })();
+  </script>
+</body>
+</html>
