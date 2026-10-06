@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>O365 Authenticated App</title>
+    <!-- Include Microsoft Authentication Library for JS (MSAL Browser v3) -->
+    <script src="msal-browser.min.js"></script>
+
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 40px; text-align: center; }
+        .hidden { display: none; }
+        .card { border: 1px solid #ccc; padding: 20px; border-radius: 8px; max-width: 400px; margin: 20px auto; }
+        button { background-color: #0078d4; color: white; border: none; padding: 10px 20px; font-size: 16px; cursor: pointer; border-radius: 4px; }
+        button:hover { background-color: #005a9e; }
+        .logout-btn { background-color: #d83b01; }
+        .logout-btn:hover { background-color: #a82e00; }
+    </style>
+</head>
+<body>
+
+    <h1>Welcome to the O365 Web App</h1>
+
+    <!-- Unauthenticated State -->
+    <div id="unauthenticated-view" class="card">
+        <p>Please sign in with your Office 365 / Microsoft account.</p>
+        <button id="login-button">Sign In</button>
+    </div>
+
+    <!-- Authenticated State -->
+    <div id="authenticated-view" class="card hidden">
+        <h3>Hello, <span id="user-display-name">User</span>!</h3>
+        <p><strong>Email:</strong> <span id="user-email"></span></p>
+        <p><strong>Roles/Groups (Authorization):</strong></p>
+        <div id="user-claims" style="text-align: left; background: #f4f4f4; padding: 10px; font-family: monospace;"></div>
+        <br>
+        <button id="logout-button" class="logout-btn">Sign Out</button>
+    </div>
+
+    <script>
+        // --- 1. Configuration ---
+        const msalConfig = {
+            auth: {
+                clientId: "fba4efb2-7fe7-4855-b0d3-112d25735a00", // Paste your Application (client) ID
+                authority: "https://login.microsoftonline.com/fb840e89-254b-4400-b7a9-ea83dd2afb82", // Paste your Directory (tenant) ID
+                redirectUri: "http://localhost:3000" // Must exactly match the Redirect URI in Entra ID
+            },
+            cache: {
+                cacheLocation: "sessionStorage", // Stores tokens securely in browser memory session
+                storeAuthStateInCookie: false,
+            }
+        };
+
+        // --- 2. Initialize MSAL Instance ---
+        const myMSALObj = new msal.PublicClientApplication(msalConfig);
+        let username = "";
+
+        // Login scopes request access to identity profile and basic claims
+        const loginRequest = {
+            scopes: ["User.Read"]
+        };
+
+        // --- 3. DOM Elements ---
+        const loginButton = document.getElementById("login-button");
+        const logoutButton = document.getElementById("logout-button");
+        const unauthView = document.getElementById("unauthenticated-view");
+        const authView = document.getElementById("authenticated-view");
+        const userDisplayName = document.getElementById("user-display-name");
+        const userEmail = document.getElementById("user-email");
+        const userClaims = document.getElementById("user-claims");
+
+        // --- 4. Core Logic Functions ---
+        async function handleResponse(response) {
+            if (response !== null) {
+                username = response.account.username;
+                showWelcomeMessage(response.account);
+            } else {
+                selectAccount();
+            }
+        }
+
+        function selectAccount() {
+            const currentAccounts = myMSALObj.getAllAccounts();
+            if (currentAccounts.length === 0) {
+                return;
+            } else if (currentAccounts.length > 1) {
+                // Add logic here if multiple users are logged into the device
+                console.warn("Multiple accounts detected.");
+                showWelcomeMessage(currentAccounts[0]);
+            } else if (currentAccounts.length === 1) {
+                username = currentAccounts[0].username;
+                showWelcomeMessage(currentAccounts[0]);
+            }
+        }
+
+        function showWelcomeMessage(account) {
+            unauthView.classList.add("hidden");
+            authView.classList.remove("hidden");
+
+            // Authentication data
+            userDisplayName.innerText = account.name;
+            userEmail.innerText = account.username;
+
+            // Authorization data (Claims / App Roles / Groups)
+            // Extracting roles or group memberships passed securely through the ID Token claims
+            const claims = account.idTokenClaims;
+            let authorizationHTML = "";
+
+            if (claims.roles) {
+                authorizationHTML += `<strong>App Roles:</strong> ${claims.roles.join(', ')}<br>`;
+            }
+            if (claims.groups) {
+                authorizationHTML += `<strong>Security Groups (IDs):</strong> ${claims.groups.join(', ')}<br>`;
+            }
+            if (!claims.roles && !claims.groups) {
+                authorizationHTML += `<em>No custom App Roles or Group claims found in token.</em>`;
+            }
+
+            userClaims.innerHTML = authorizationHTML;
+        }
+
+        // --- 5. Event Listeners & Initialization ---
+        // Wrap initialization in window.onload to ensure the CDN script is fully ready
+        window.onload = async function() {
+            try {
+                // --- 2. Initialize MSAL Instance ---
+                window.myMSALObj = new msal.PublicClientApplication(msalConfig);
+
+                await myMSALObj.initialize();
+                selectAccount();
+
+                // Move your login event listener inside here so it only binds once initialized
+                loginButton.addEventListener("click", () => {
+                    myMSALObj.loginPopup(loginRequest)
+                        .then(handleResponse)
+                        .catch(error => {
+                            console.error("Login failed: ", error);
+                        });
+                });
+
+            } catch (error) {
+                console.error("MSAL initialization failed: ", error);
+            }
+        };
+
+        logoutButton.addEventListener("click", () => {
+            const logoutRequest = {
+                account: myMSALObj.getAccountByUsername(username),
+                postLogoutRedirectUri: window.location.origin
+            };
+            myMSALObj.logoutPopup(logoutRequest);
+        });
+
+        // Initialize handling on page load (checks for existing active session)
+        myMSALObj.initialize().then(() => {
+            selectAccount();
+        });
+    </script>
+</body>
+</html>
