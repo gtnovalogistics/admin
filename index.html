@@ -57,7 +57,8 @@
 
         // Login scopes request access to identity profile and basic claims
         const loginRequest = {
-            scopes: ["User.Read"]
+            scopes: ["User.Read"],
+            extraQueryParameters: { domain_hint: "yourcompany.com" }
         };
 
         // --- 3. DOM Elements ---
